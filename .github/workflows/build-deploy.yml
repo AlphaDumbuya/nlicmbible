@@ -42,8 +42,8 @@ jobs:
           
       - name: Build Android App
         run: |
-          echo "Starting Android build..."
-          npx eas-cli build --platform android --profile preview --non-interactive
+          echo "Starting Android build in EAS cloud..."
+          npx eas build --platform android --profile preview --non-interactive --no-wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           NODE_OPTIONS: --max_old_space_size=4096
