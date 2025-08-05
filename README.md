@@ -1,8 +1,18 @@
-# Welcome to your Expo app 👋
+# NLICM Krio Audio Bible App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native/Expo application that provides access to the Bible in Krio language through audio recordings.
 
-## Get started
+## About Audio Files
+
+This app streams audio files directly from Google Drive. The audio files are not included in this repository to:
+- Keep the repository size manageable
+- Enable efficient deployment
+- Allow for easier updates to audio content
+- Reduce initial app download size
+
+Audio files are automatically downloaded and cached when needed during playback.
+
+## Getting Started
 
 1. Install dependencies
 

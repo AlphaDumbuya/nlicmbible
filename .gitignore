@@ -39,9 +39,14 @@ yarn-error.*
 # app example folder
 app-example
 
-# audio files and media
+# Audio files (served from Google Drive)
 assets/audio/
 audio/
+**/audio/
+**/*.mp3
+**/*.wav
+**/*.ogg
+**/*.m4a
 *.mp3
 *.wav
 *.ogg
