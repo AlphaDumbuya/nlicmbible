@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "NLICM Krio Bible",
+    "slug": "NLICMKrioBibleApp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/nlicm-logo.jpg",
+    "scheme": "nlicmkriobibleapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nlicm.kriobible",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.nlicm.kriobible",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/nlicm-logo.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "splash": {
+      "image": "./assets/images/nlicm-logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
