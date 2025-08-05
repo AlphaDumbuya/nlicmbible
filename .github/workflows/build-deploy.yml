@@ -23,18 +23,30 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
         
+      - name: Setup Expo
+        run: |
+          npm install -g expo-cli
+          npm install -g eas-cli
+          
+      - name: Login to Expo
+        run: |
+          echo "Logging in to Expo..."
+          echo $EXPO_TOKEN | npx expo login --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          
       - name: Configure EAS
         run: |
           echo "Configuring EAS..."
-          npm install -g expo-cli
           npx eas-cli config --non-interactive
           
       - name: Build Android App
         run: |
           echo "Starting Android build..."
-          npx eas-cli build --platform android --profile preview --non-interactive --no-wait
+          npx eas-cli build --platform android --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          NODE_OPTIONS: --max_old_space_size=4096
           
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.5
