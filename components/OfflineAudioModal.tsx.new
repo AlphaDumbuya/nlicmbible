@@ -1,0 +1,264 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+  SafeAreaView,
+} from 'react-native';
+import Icon from '@expo/vector-icons/Ionicons';
+import bible from '../app/constants/bible';
+
+interface Book {
+  name: string;
+  chapters: number;
+}
+
+interface OfflineAudioModalProps {
+  onClose: () => void;
+  cacheStatus: {
+    totalSize: number;
+    cachedBooks: { [book: string]: number[] };
+    isOnline: boolean;
+  };
+  isLoading: boolean;
+  refreshing: boolean;
+  onRefresh: () => Promise<void>;
+  preloadBook: (book: string) => Promise<void>;
+  removeBookFromCache: (book: string) => Promise<void>;
+  clearAllCache: () => Promise<void>;
+  formatSize: (bytes: number) => string;
+}
+
+export default function OfflineAudioModal({
+  onClose,
+  cacheStatus,
+  isLoading,
+  refreshing,
+  onRefresh,
+  preloadBook,
+  removeBookFromCache,
+  clearAllCache,
+  formatSize,
+}: OfflineAudioModalProps) {
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={onClose} style={{ padding: 10 }}>
+            <Icon name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Offline Audio</Text>
+        </View>
+        {cacheStatus.isOnline ? (
+          <Text style={[styles.statusText, { color: '#4CAF50' }]}>Online</Text>
+        ) : (
+          <Text style={[styles.statusText, { color: '#f44336' }]}>Offline</Text>
+        )}
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.section}>
+          <View style={styles.settingRow}>
+            <View>
+              <Text style={styles.settingTitle}>Storage Used</Text>
+              <Text style={styles.settingDescription}>
+                {formatSize(cacheStatus.totalSize)}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(
+                  'Clear All Cache',
+                  'Are you sure you want to remove all downloaded audio files?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Clear',
+                      style: 'destructive',
+                      onPress: async () => {
+                        try {
+                          await clearAllCache();
+                          Alert.alert('Success', 'All cached audio files have been removed.');
+                        } catch (error) {
+                          Alert.alert('Error', 'Failed to clear cache. Please try again.');
+                        }
+                      },
+                    },
+                  ]
+                );
+              }}
+              style={{ padding: 8 }}
+            >
+              <Text style={{ color: '#f44336' }}>Clear All</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Old Testament</Text>
+          {bible.oldTestament.map((book: Book) => (
+            <View key={book.name} style={styles.settingRow}>
+              <View>
+                <Text style={styles.settingTitle}>{book.name}</Text>
+                <Text style={styles.settingDescription}>
+                  {(cacheStatus.cachedBooks[book.name] || []).length} /{' '}
+                  {book.chapters} chapters
+                </Text>
+              </View>
+              {isLoading ? (
+                <ActivityIndicator />
+              ) : (cacheStatus.cachedBooks[book.name]?.length || 0) ===
+                book.chapters ? (
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      await removeBookFromCache(book.name);
+                      Alert.alert('Success', `${book.name} has been removed.`);
+                    } catch (error) {
+                      Alert.alert('Error', `Failed to remove ${book.name}.`);
+                    }
+                  }}
+                  style={[styles.button, { backgroundColor: '#f44336' }]}
+                >
+                  <Text style={styles.buttonText}>Remove</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      await preloadBook(book.name);
+                      Alert.alert('Success', `${book.name} has been downloaded.`);
+                    } catch (error) {
+                      Alert.alert('Error', `Failed to download ${book.name}.`);
+                    }
+                  }}
+                  style={[styles.button, { backgroundColor: '#FF8C00' }]}
+                >
+                  <Text style={styles.buttonText}>Download</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>New Testament</Text>
+          {bible.newTestament.map((book: Book) => (
+            <View key={book.name} style={styles.settingRow}>
+              <View>
+                <Text style={styles.settingTitle}>{book.name}</Text>
+                <Text style={styles.settingDescription}>
+                  {(cacheStatus.cachedBooks[book.name] || []).length} /{' '}
+                  {book.chapters} chapters
+                </Text>
+              </View>
+              {isLoading ? (
+                <ActivityIndicator />
+              ) : (cacheStatus.cachedBooks[book.name]?.length || 0) ===
+                book.chapters ? (
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      await removeBookFromCache(book.name);
+                      Alert.alert('Success', `${book.name} has been removed.`);
+                    } catch (error) {
+                      Alert.alert('Error', `Failed to remove ${book.name}.`);
+                    }
+                  }}
+                  style={[styles.button, { backgroundColor: '#f44336' }]}
+                >
+                  <Text style={styles.buttonText}>Remove</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      await preloadBook(book.name);
+                      Alert.alert('Success', `${book.name} has been downloaded.`);
+                    } catch (error) {
+                      Alert.alert('Error', `Failed to download ${book.name}.`);
+                    }
+                  }}
+                  style={[styles.button, { backgroundColor: '#FF8C00' }]}
+                >
+                  <Text style={styles.buttonText}>Download</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 16,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  section: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  settingDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  button: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '500',
+  },
+});

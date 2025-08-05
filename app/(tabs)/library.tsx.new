@@ -1,0 +1,368 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  SafeAreaView,
+  Alert
+} from 'react-native';
+import Icon from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Audio } from 'expo-av';
+import { bookCategories } from '../constants/bookCategories';
+import { getAudioAsset } from '../../src/constants/audioAssets';
+import { oldTestament, newTestament } from '../constants/bible';
+
+const topicsData = [
+  {
+    category: 'Emotional Healing',
+    topics: [
+      { topic: 'Fear & Anxiety', books: ['Psalms', 'Isaiah', 'Matthew', 'Philippians'] },
+      { topic: 'Depression', books: ['Psalms', 'Job', 'Lamentations', '2 Corinthians'] },
+      { topic: 'Loneliness', books: ['Psalms', 'Isaiah', 'John', 'Hebrews'] },
+      { topic: 'Grief & Loss', books: ['Psalms', 'John', 'Lamentations', '1 Thessalonians'] },
+      { topic: 'Stress', books: ['Matthew', 'Philippians', 'Psalms', '1 Peter'] },
+      { topic: 'Anger', books: ['James', 'Ephesians', 'Proverbs', 'Psalms'] }
+    ]
+  },
+  // ... other topic categories ...
+];
+
+export default function Library() {
+  const router = useRouter();
+  const [selectedTestament, setSelectedTestament] = useState<'old' | 'new'>('new');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [currentBooks, setCurrentBooks] = useState<string[]>(newTestament);
+
+  // Filter categories based on selected testament
+  const filteredCategories = bookCategories.filter(
+    category => category.testament === selectedTestament
+  );
+
+  const handleSelectBook = (book: string) => {
+    router.push({ 
+      pathname: '/home',
+      params: { playBook: book, playChapter: 1 }
+    });
+  };
+
+  const renderTopicsSection = () => {
+    if (expandedCategory) {
+      const categoryData = topicsData.find(c => c.category === expandedCategory);
+      
+      return (
+        <>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => setExpandedCategory(null)}
+          >
+            <Icon name="chevron-back" size={24} color="#007AFF" />
+            <Text style={styles.backButtonText}>Back to Topics</Text>
+          </TouchableOpacity>
+          <ScrollView>
+            <View style={styles.expandedTopics}>
+              <Text style={styles.expandedTitle}>{expandedCategory}</Text>
+              {categoryData?.topics.map(topic => (
+                <View key={topic.topic} style={styles.topicContainer}>
+                  <Text style={styles.topicTitle}>{topic.topic}</Text>
+                  {topic.books.map((book, index) => (
+                    <TouchableOpacity
+                      key={`${book}-${index}`}
+                      style={styles.referenceItem}
+                      onPress={() => handleSelectBook(book)}
+                    >
+                      <View>
+                        <Text style={styles.referenceTitle}>{book}</Text>
+                      </View>
+                      <Icon name="play-circle-outline" size={24} color="#007AFF" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <Text style={styles.sectionSubtitle}>
+          Find Biblical guidance for every aspect of life:
+        </Text>
+        <View style={styles.topicsScroll}>
+          {topicsData.map(category => (
+            <TouchableOpacity 
+              key={category.category}
+              style={styles.categoryCard}
+              onPress={() => setExpandedCategory(category.category)}
+            >
+              <Text style={styles.categoryTitle}>{category.category}</Text>
+              <Text style={styles.categorySubtext}>{category.topics.length} topics</Text>
+              <Icon name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </>
+    );
+  };
+
+  useEffect(() => {
+    if (selectedTestament === 'new') {
+      setCurrentBooks(newTestament);
+    } else {
+      setCurrentBooks(oldTestament);
+    }
+  }, [selectedTestament]);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+        <View style={styles.testamentSelector}>
+          <TouchableOpacity
+            style={[
+              styles.testamentButton,
+              selectedTestament === 'new' && styles.selectedTestament,
+            ]}
+            onPress={() => setSelectedTestament('new')}
+          >
+            <Text
+              style={[
+                styles.testamentText,
+                selectedTestament === 'new' && styles.selectedTestamentText,
+              ]}
+            >
+              New Testament
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.testamentButton,
+              selectedTestament === 'old' && styles.selectedTestament,
+            ]}
+            onPress={() => setSelectedTestament('old')}
+          >
+            <Text
+              style={[
+                styles.testamentText,
+                selectedTestament === 'old' && styles.selectedTestamentText,
+              ]}
+            >
+              Old Testament
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.categoriesSection}>
+          <Text style={styles.sectionTitle}>Books by Category</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {filteredCategories.map(category => (
+              <TouchableOpacity
+                key={category.name}
+                style={styles.categoryItem}
+                onPress={() => handleSelectBook(category.books[0])}
+              >
+                <Text style={styles.categoryName}>{category.name}</Text>
+                <Text style={styles.bookCount}>{category.books.length} books</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.booksSection}>
+          <Text style={styles.sectionTitle}>All Books</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {filteredCategories.map(category => (
+              <View key={category.name} style={styles.bookCategory}>
+                <Text style={styles.categoryHeader}>{category.name}</Text>
+                {category.books.map(book => (
+                  <TouchableOpacity
+                    key={book}
+                    style={styles.bookItem}
+                    onPress={() => handleSelectBook(book)}
+                  >
+                    <Text style={styles.bookTitle}>{book}</Text>
+                    <View style={styles.bookMeta}>
+                      <View style={styles.chapterCount}>
+                        <Text style={styles.metaText}>66 chapters</Text>
+                      </View>
+                      <Icon name="play-circle-outline" size={24} color="#007AFF" />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.lifeTopicsSection}>
+          <Text style={styles.sectionTitle}>Life Topics</Text>
+          {renderTopicsSection()}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  testamentSelector: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    margin: 10,
+  },
+  testamentButton: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  selectedTestament: {
+    backgroundColor: '#007AFF',
+  },
+  testamentText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  selectedTestamentText: {
+    color: '#fff',
+  },
+  categoriesSection: {
+    padding: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  categoryItem: {
+    backgroundColor: '#f5f5f5',
+    padding: 15,
+    borderRadius: 10,
+    marginRight: 10,
+    minWidth: 120,
+  },
+  categoryName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  bookCount: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  booksSection: {
+    padding: 10,
+  },
+  bookCategory: {
+    marginRight: 20,
+    minWidth: 280,
+  },
+  categoryHeader: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  bookItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  bookTitle: {
+    fontSize: 16,
+  },
+  bookMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chapterCount: {
+    backgroundColor: '#e0e0e0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  metaText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  lifeTopicsSection: {
+    padding: 10,
+  },
+  sectionSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 15,
+  },
+  topicsScroll: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  categoryCard: {
+    backgroundColor: '#f5f5f5',
+    padding: 15,
+    borderRadius: 10,
+    width: '48%',
+    flexDirection: 'column',
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  categorySubtext: {
+    fontSize: 14,
+    color: '#666',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    marginLeft: 5,
+  },
+  expandedTopics: {
+    padding: 10,
+  },
+  expandedTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  topicContainer: {
+    marginBottom: 20,
+  },
+  topicTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  referenceItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  referenceTitle: {
+    fontSize: 16,
+  },
+});
